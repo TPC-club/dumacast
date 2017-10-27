@@ -1,0 +1,14 @@
+Source: dumacast
+Section: Internet
+Priority: optional
+Maintainer: Mikhail Novosyolov <mikhailnov@dumalogiya.ru>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: http://dumalogiya.ru/webinar/linux
+
+Package: dumacast
+Architecture: any
+Depends: bsdutils, bash, ffmpeg, zenity, pulseaudio, v4l2loopback-utils, v4l2loopback-dkms, v4l-utils
+Recommends: pavucontrol, adobe-flashplugin, chromium-browser
+Description: Dumalogiya DUMACAST
+ Dumalogiya's' virtual webcam and microphone.

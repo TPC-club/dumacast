@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# This srcipt must have suid and will be called from the userspace to modprobe needed kernel modules
+
+modprobe v4l2loopback

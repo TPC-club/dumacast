@@ -1,0 +1,36 @@
+dumalogiya-vwcm (2.4) xenial; urgency=high
+
+  * Устранен вылет сеанса при отсутствии веб-камеры
+  * Исправлена уязвимость (права 777 на папку /var/logs/dumalogiya)
+  * Убрана папка с логами /var/logs/dumalogiya, логирование переведено на системную утилиту logger, пишущую в основной системный лог (journalctl с systemd)
+  * Конфиги перенесены в домашнюю папку, обеспечена автоматическая миграция конфигов из старого расположения в новое
+  * Теперь запуске выполняется проверка, что все конфиги не пустые
+  * Подгрузка модуля ядра вынесена в отдельный скрипт dumalogiya-vwcm-modprobe с аттрибутом suid, теперь не нужен механизм разрешения команды sudo modprobe v4l2loopback через /etc/sudoers.d, но пока что конфиги sudoers оставлены, подумаю, что с ними делать, удалить ли полностью?
+  * Скрипт пытается подгрузить модуль ядра v4l2loopback, только если грубая предварительная проверка показала, что он не загружен
+  * Переделан механизм опредления исполняемого файла Chromium или Chromium-подобного браузера, также, теперь, если Chromium не найден, то скрипт пытается использовать Google Chrome
+
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Sat, 08 Jul 2017 23:59:18 +0300 
+ 
+dumalogiya-vwcm (2.3) xenial; urgency=high
+
+  * Fix config directory
+
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Thu, 05 Jan 2017 17:04:18 +0300 
+ 
+dumalogiya-vwcm (2.2) xenial; urgency=medium
+
+  * Fix config directory
+
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Thu, 05 Jan 2017 15:04:18 +0300 
+ 
+dumalogiya-vwcm (2.1) xenial; urgency=medium
+
+  * Fix logging
+
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Thu, 09 Dec 2016 15:04:18 +0300 
+ 
+dumalogiya-vwcm (2.0) xenial; urgency=medium
+
+  * Initial release
+
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Thu, 08 Dec 2016 15:04:18 +0300 

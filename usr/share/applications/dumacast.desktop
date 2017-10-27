@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=dumalogiya-vwcm
+Version=1.0
+Exec=/usr/bin/dumalogiya-vwcm | tee -a "/var/log/dumalogiya/dumalogiya_`date +%d.%m.%y_%Hh_%Mm`.log"
+Comment=Трансляция видео на площадке Думалогии
+Icon=/usr/share/pixmaps/dumalogiya-vwcm.svg
+Type=Application
+Terminal=false
+StartupNotify=true
+Encoding=UTF-8
+Categories=Utility;Думалогия;dumalogiya;
+Comment[en]=Broadcast video and audio into a virtual webcam

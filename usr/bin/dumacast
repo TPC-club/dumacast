@@ -1,0 +1,250 @@
+#!/bin/bash
+# автор — Михаил Новоселов <mikhailnov@dumalogiya.ru>
+
+CONFIG_DIR_GLOBAL="/etc/dumalogiya"
+# Надо бы использовать что-то типа $XDG_CONFIG_HOME, но такого , судя по всему, из коробки нет
+CONFIG_DIR_USER="$HOME/.config/dumacast"
+
+# проверим, есть ли уже папка в домашней директории с конфигами, если нет, создадим ее и скопируем туда конфиги из папки глобальных конфигов
+if [ -d $CONFIG_DIR_USER ]
+	then
+		echo "Папка с конфигами внутри домашней папки пользователя найдена, предполагаем, что раз есть папка, то в ней есть и конфиги"
+	else
+		echo "Папка с конфигами внутри домашней папки пользователя НЕ найдена, создадим ее и скопируем туда конфиги"
+		mkdir -p "$CONFIG_DIR_USER"
+		# for i in REAL_MICROPHONE.example REAL_MICROPHONE REAL_OUTPUT.example REAL_OUTPUT WEBCAM.example WEBCAM 
+		for i in dumacast-config.sh
+			do
+				cp -rv "$CONFIG_DIR_GLOBAL/$i" "$CONFIG_DIR_USER/$i"
+			done
+		ln -s "$CONFIG_DIR_USER/README.md" "$CONFIG_DIR_GLOBAL/README.md"
+fi
+
+# теперь перенесем содержимое существующих конфигов в новые (пеерехжаем на новый формат конфигов). CONFIG_DIR_GLOBAL не задаем переменной, т.к. у старой версии нашей программы была фиксированная диркетория с конфигами
+# получится, что внутри конфига сначала будет присваиваться одно (стандаратное или пустое) значение переменной, а следующими строками — перенесенное из старых конфигов
+# если файл .block-v2-to-v3-config-merge существует, то значит, что перенос конфигов уже выполнен, и при этом запуске не нужно их переносить заново
+if ! [ -f "$CONFIG_DIR_USER/.block-v2-to-v3-config-merge" ]; then
+	for i in WEBCAM REAL_MICROPHONE REAL_OUTPUT
+	do
+		if ! [ -z `cat /etc/dumalogiya/$i` ]; then
+			echo "" >> "$CONFIG_DIR_USER/dumacast-config.sh"
+			echo "$i=\"`cat /etc/dumalogiya/$i`\" " >> "$CONFIG_DIR_USER/dumacast-config.sh"
+		fi
+	done
+	touch "$CONFIG_DIR_USER/.block-v2-to-v3-config-merge"
+fi
+
+# check if the kernel module v4l2loopback is already loaded, otherwise load it
+if [ -z "`lsmod | grep v4l2loopback`" ]
+	then
+		# /usr/bin/dumalogiya-vwcm-modprobe is a script with suid which allows to perform "modprobe v4l2loopback" from userspace
+		dumalogiya-vwcm-modprobe
+fi
+# проверим наличие браузера, с которым мы должны работать
+if ! [ -f "$CHROMIUM" ]; then
+	if [ -f /usr/bin/chromium-browser ]
+		then
+			CHROMIUM="/usr/bin/chromium-browser"
+		else
+			if [ -f /usr/bin/chromium ]; then CHROMIUM="/usr/bin/chromium"; else
+			echo "chromium-browser не найден, попробуем Google Chrome"
+			# если и Хром не найдется, то чуть дальше по коду будет exit 1
+			CHROMIUM=`ls /usr/bin | grep google-chrome | head -n1`
+			fi
+	fi
+fi
+if [ -f "$CHROMIUM" ];
+		then
+		   echo "Веб-браузер Chromium найден, продолжаем работать..."
+		else
+		   echo "Ошибка! Браузер Chromium не найден, через Firefox работать не будет!!!"
+		   zenity --error --text="Ошибка! Браузер Chromium не найден, через Firefox работать не будет! Не можем продолжить работать"
+		   exit 1
+fi
+	
+VIRT_CAMERA="/dev/`ls /sys/devices/virtual/video4linux/ | head -n1`"
+# пордгружаем настройки из файлов-конфигов
+source "$CONFIG_DIR_GLOBAL/dumacast-config.sh"
+source "$CONFIG_DIR_USER/dumacast-config.sh"
+# таким образом, если в конфигах не задана вирутальная веб-камера, то будет использоваться первая в системе, а если задана, то параметр будет перезаписан
+
+RESOLUTION=""$IMG_WIDTH"x"$IMG_HEIGHT""
+echo "Разрешение картинки: $RESOLUTION"
+#-vf scale=w=640:h=480:force_original_aspect_ratio=decrease
+
+if [ -f /usr/bin/pulseaudio ];
+	then
+		echo "Pulseaudio найдена, продолжаем работать..."
+	else
+		echo "Pulseaudio не найдена, не можем продолжить работать!"
+		zenity --error --text="Звуковая система Pulseaudio не найдена, без нее не сможем сделать виртуальный микрофон, завершаем работу!"
+		exit 1
+fi
+if [ -f /usr/bin/ffmpeg ];
+	then
+		echo "FFmpeg найден, продолжаем работать..."
+	else
+		echo "FFmpeg не найден, не можем продолжить работать! На libav скрипт не проверяли, возможно, будет работать."
+		zennity --error --text="FFmpeg не найден, не можем продолжить работать! Если вы на Ubuntu 14.04/Debian 8/Mint 17, то установите FFmpeg из дополнительных репозиториев! На libav скрипт не проверяли, возможно, будет работать."
+		exit 1
+fi
+
+# WEBCAM="`cat $CONFIG_DIR_GLOBAL/WEBCAM`"
+echo "Webcamera: $WEBCAM"
+
+echo "Виртуальная камера: $VIRT_CAMERA"
+if [ -c $VIRT_CAMERA ];
+	then
+	   echo "Виртуальная веб-камера $VIRT_CAMERA найдена, продолжаем работать..."
+	else
+	   echo "Ошибка! Витуальная камера не найдена!!!"
+	   zenity --error --text="Не найдена вирутальная веб-камера, не можем продолжить работать! Загрузите модуль ядра v4l2loopback (команда: sudo modprobe v4l2loopback), предварительно подключив настоящую веб-камеру, если она не подключена, после этого заново запустите скрипт проведения занятия!"
+	   exit 1
+fi
+pkill chromium
+pkill pavucontrol
+
+if [ PULSEAUDIO_RESTART = "yes" ]
+	then
+		pulseaudio --kill
+		sleep 5
+		pulseaudio --start
+		sleep 10
+fi
+echo "Real microphone: $REAL_MICROPHONE"
+echo "Real output: $REAL_OUTPUT"
+# эта такой баг, наверное, v4l2loopback: если пустить в вирутальную веб-камеру картинку с камеры после локального видео или наоборот при условии, что соотношение их ширины и всоты разное, то на незанытой новым разрешением области будет мигать последний кадр предыдущей трансляции, поэтому на несколько секунд пускаем полностью черное видео, чтобы избежать такого эффекта
+EMPTY_VIDEO="$CONFIG_DIR_GLOBAL/empty.mp4"
+
+# проверим, настроены эти нужные нам параметры
+for i in REAL_MICROPHONE REAL_OUTPUT WEBCAM VIRT_CAMERA CHROMIUM
+	do
+		# check if the string (variable) is null
+		if [ -z "$i" ]
+			then
+				zenity --error --text="Не найдена настройка $i , без нее не можем продолжить работать, завершается работа программы!!"
+				exit 1
+		fi
+	done
+
+pactl load-module module-null-sink sink_name=ffmpegplay sink_properties=device.description="Проигрывание_видеоролика"
+pactl load-module module-null-sink sink_name=null1 sink_properties=device.description="null1"
+pactl load-module module-loopback source=$REAL_MICROPHONE sink=null1
+#pactl load-module module-loopback source=$REAL_MICROPHONE sink=null0
+# pactl load-module module-combine-sink sink_name=Combine slaves=ffmpegplay,null1
+pactl load-module module-loopback source=ffmpegplay.monitor sink="$REAL_OUTPUT"
+#pactl load-module module-loopback source=null0.monitor sink=$REAL_OUTPUT
+#pactl load-module module-loopback source=null0.monitor sink=null1
+pactl load-module module-loopback source=ffmpegplay.monitor sink=null1
+pactl set-sink-volume null1 100%
+pactl set-sink-volume ffmpegplay 100%
+#pactl set-sink-volume Combine 100%
+pactl set-source-volume null1.monitor 100%
+#pactl set-source-volume Combine.monitor 100%
+pactl set-source-volume ffmpegplay.monitor 100%
+
+### не могу вспомнить, зачем это нужно делать, скорее всего, это ничего не дает, позже нужно проверить
+v4l2-ctl -d "$VIRT_CAMERA" -c timeout=1500
+function kill_ffmpeg_all { 
+	echo "kill_ffmpeg_all begin..."
+	kill -9 "`cat /tmp/ffmpeg-webcam-dumalogiya.pid`"
+	kill -2 "`cat /tmp/ffmpeg-video-dumalogiya.pid`"
+	kill -2 "`cat /tmp/ffmpeg-nullframe-dumalogiya.pid`"
+	kill -2 "`cat /tmp/ffmpeg-audio-dumalogiya.pid`"
+	echo "Killing -9 lsof -t $WEBCAM"
+	# check if WEBCAM variable is not null and only than kill, without this check lsof -t returns a lot of userspace PIDs and the session stops after killing them
+	if [ -n "$WEBCAM" ]
+		then
+			kill -9 $(lsof -t $WEBCAM)
+	fi
+}
+
+function kill_ffmpeg_0 { 
+	kill -2 "`cat /tmp/ffmpeg-webcam-dumalogiya.pid`"
+	# kill -2 "`cat /tmp/ffmpeg-video-dumalogiya.pid`"
+	kill -2 "`cat /tmp/ffmpeg-nullframe-dumalogiya.pid`"
+	kill -9 $(lsof -t /dev/video0)
+}
+function ffmpeg_zaglushka {
+	ffmpeg -i "$EMPTY_VIDEO" -f v4l2 -pix_fmt rgb24 -vf scale=w=$IMG_WIDTH:h=$IMG_HEIGHT:force_original_aspect_ratio=decrease $VIRT_CAMERA & echo $! >/tmp/ffmpeg-nullframe-dumalogiya.pid
+}
+function ffmpeg_real_webcam {
+	ffmpeg -f video4linux2 -i $WEBCAM -f v4l2 -pix_fmt rgb24 -vf scale=w=$IMG_WIDTH:h=$IMG_HEIGHT:force_original_aspect_ratio=decrease $VIRT_CAMERA &
+	echo $! >/tmp/ffmpeg-webcam-dumalogiya.pid
+}
+kill_ffmpeg_all
+echo "dumalogiya-vwcm: 1) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
+# kill_ffmpeg_all
+# v4l2loopback-ctl set-timeout-image $CONFIG_DIR_GLOBAL/null.png $VIRT_CAMERA
+# v4l2-ctl -d $VIRT_CAMERA -c timeout_image_io=0
+# v4l2loopback-ctl set-fps 25 $VIRT_CAMERA
+# pavucontrol & PULSE_SOURCE=null0.monitor chromium &
+echo "dumalogiya-vwcm: 2) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
+ffmpeg_zaglushka
+ffmpeg_real_webcam &
+# ffmpeg -f video4linux2 -i $WEBCAM -f v4l2 -pix_fmt yuv420p -vf scale=640:480 $VIRT_CAMERA &
+function keep_format {
+	v4l2-ctl -d $VIRT_CAMERA -c keep_format=1
+}
+function choose_action {
+	CHOICE=$(zenity --list --radiolist --height=300 \
+		   --width="800" \
+		   --title="Выбор дальнейшего действия" \
+		   --text="Что будем делать?" \
+		   --column="да/нет" --column="Что будем делать?" \
+		   TRUE "Пустить в эфир видео с веб-камеры" \
+		   FALSE "Завершить все трансляции и выбрать видео/аудио для трансляции" \
+		   FALSE "Не завершая трансляции проиграть АУДИО в эфир" \
+		   FALSE "Завершить все трансляции" \
+		   FALSE "Полностью выйти из программы трансляции" \
+		   FALSE "Пустить в эфир черную заглушку" )
+
+	case $CHOICE in 
+		"Пустить в эфир видео с веб-камеры")
+			kill_ffmpeg_all
+			keep_format
+			ffmpeg_zaglushka
+			ffmpeg_real_webcam & 
+		;;
+		"Завершить все трансляции и выбрать видео/аудио для трансляции")
+			filename="`zenity --file-selection --title="Выбор видео/аудио для проигрывания"`"
+					case $? in
+					0)
+					kill_ffmpeg_all
+					ffmpeg_zaglushka
+					$(PULSE_SINK=ffmpegplay ffmpeg -re -i "$filename" -f v4l2 -pix_fmt rgb24 -vf scale=w=$IMG_WIDTH:h=$IMG_HEIGHT:force_original_aspect_ratio=decrease $VIRT_CAMERA -f alsa default & echo $! >/tmp/ffmpeg-video-dumalogiya.pid) && ffmpeg_real_webcam &
+					;;
+					*)  zenity --info --text="Не выбран файл, продолжаем работать без проигрывания видео или аудио в виртуальные камеру и микрофон" ;;
+					esac 
+		;;
+		"Не завершая трансляции проиграть АУДИО в эфир")
+			filename="`zenity --file-selection --title="Выбор аудио для проигрывания"`"
+					case $? in
+					0)
+					env PULSE_SINK=ffmpegplay ffmpeg "$filename" & echo $! >/tmp/ffmpeg-audio-dumalogiya.pid &
+					;;
+					*)  zenity --info --text="Не выбран файл, продолжаем работать без проигрывания аудио в виртуальные камеру и микрофон" ;;
+					esac 
+		;;
+		"Завершить все трансляции")
+			kill_ffmpeg_all
+			zenity --info --text="Все трансляции в виртуальную веб-камеру завершены!"
+		;;
+		"Полностью выйти из программы трансляции")	
+			kill_ffmpeg_all
+			keep_format
+			rm -fv /tmp/ffmpeg-*-dumalogiya.pid
+			exit 0
+		;;
+		"Пустить в эфир черную заглушку")
+			kill_ffmpeg_all
+			ffmpeg_zaglushka
+	esac
+}
+
+while true; do choose_action; done & \
+pavucontrol & PULSE_SOURCE=null1.monitor "$CHROMIUM" "$OPEN_URL"
+ffmpeg_zaglushka
+# PULSE_SINK=null0 ffmpeg -re -i "$VIDEO_FILE" -f v4l2 $VIRT_CAMERA -f alsa default & PULSE_SOURCE=null0.monitor chromium
+# & echo @! >/tmp/virtual-wcm.pid 
+

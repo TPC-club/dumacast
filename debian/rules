@@ -1,0 +1,27 @@
+#!/usr/bin/make -f
+# строчка выше - это не комментарий, не протеряйте её.
+
+# https://debian.pro/1390
+# отказываемся от использования dh_install, который в данном примере больше будет мешать, чем помогать принцип сборки пакетов:
+override_dh_install:
+# дальше мы создаём дерево каталогов внутри сборочного дерева, из которого соберется архив с файлами:
+# для начала убедимся, что там не осталось хлама от предыдущих сборок (получим пустой каталог debian/dumacast):
+	mkdir -p debian/dumacast/
+	# если не создавать пустой файл - то команда rm упадёт со словами "нечего удалять" и сборка пакета не случится
+	touch debian/dumacast/dummy
+	rm -rf debian/dumacast/*
+	# теперь создаём нужные каталоги:
+	# копируем наши файлики:
+	cp -r etc debian/dumacast/
+	cp -r usr debian/dumacast/
+	cp README.md debian/dumacast/etc/dumalogiya/README.md
+	# выставим флаг +x на скрипты внутри пакета, чтобы они могли запускаться:
+	chown -R root:root debian/dumacast/
+	chmod +x debian/dumacast/usr/bin/*
+	chmod u+s debian/dumacast/usr/bin/dumacast-modprobe
+	chmod -R 755 debian/dumacast/usr/bin/
+	chmod -R 440 debian/dumacast/etc/sudoers.d/
+ 
+# запускаем все остальные deb-helper'ы "по умолчанию" (про которые мы как раз ничего не знаем):
+%:
+	dh $@
