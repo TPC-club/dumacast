@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=dumalogiya-vwcm
+Name=Dumacast
 Version=1.0
-Exec=/usr/bin/dumalogiya-vwcm | tee -a "/var/log/dumalogiya/dumalogiya_`date +%d.%m.%y_%Hh_%Mm`.log"
+Exec=/usr/bin/dumacast
 Comment=Трансляция видео на площадке Думалогии
-Icon=/usr/share/pixmaps/dumalogiya-vwcm.svg
+Icon=/usr/share/pixmaps/dumacast.svg
 Type=Application
 Terminal=false
 StartupNotify=true

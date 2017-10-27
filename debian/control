@@ -9,6 +9,9 @@ Homepage: http://dumalogiya.ru/webinar/linux
 Package: dumacast
 Architecture: any
 Depends: bsdutils, bash, ffmpeg, zenity, pulseaudio, v4l2loopback-utils, v4l2loopback-dkms, v4l-utils
+Conflicts: dumalogiya-vwcm
+Replaces: dumalogiya-vwcm
+Provides: dumalogiya-vwcm
 Recommends: pavucontrol, adobe-flashplugin, chromium-browser
 Description: Dumalogiya DUMACAST
  Dumalogiya's' virtual webcam and microphone.
