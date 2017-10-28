@@ -47,8 +47,8 @@
 Скачайте и установите deb-пакет из раздела [релизов](https://github.com/mikhailnov/dumacast/releases).<br>
 Для RPM и иных систем можно вручную положить папки /etc и /usr из этого дерева исходников в корень системы, то есть выполнить такие команды:<br>
 git clone https://github.com/mikhailnov/dumacast.git<br>
-sudo cp etc /<br>
-sudo cp usr /<br>
+sudo cp -rv etc /<br>
+sudo cp -rv usr /<br>
 
 ## Сборка deb-пакета
 git clone https://github.com/mikhailnov/dumacast.git<br>
