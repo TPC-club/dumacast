@@ -43,9 +43,9 @@
 ![](img/img1.png) 
 
 ## Сборка deb-пакета
-git clone https://github.com/mikhailnov/dumacast.git
-cd dumacast
-debuild
+git clone https://github.com/mikhailnov/dumacast.git<br>
+cd dumacast<br>
+debuild<br>
 
 ## Участие в разработке
 Любые предложения, замечания, баг-репорты и коммиты приветствуются. в том числе такие, которые помогут сделать программу более универсальной. Я собираю ее только в deb пакеты, доступные в разделе релизов (Releases), поскольку на наших машинах и машинах наших тренеров, где работает Думакаст, используется Ubuntu, в основной ветке кода есть папка debian с конфигами для сборке deb-пакета, если кто закоммитит RPM .spec, pkgbuild, ebuild, то будет очень неплохо.
@@ -55,9 +55,9 @@ debuild
 Дописать README, сделать его понятнее (если есть идеи — присылайте коммиты).
 
 ## Контакты разработчика:
-Михаил Новоселов
-mikhailnov@dumalogiya.ru
-[vk.com/mikhailnov](https://vk.com/mikhailnov) 
+Михаил Новоселов<br>
+mikhailnov@dumalogiya.ru<br>
+[vk.com/mikhailnov](https://vk.com/mikhailnov) <br>
 
 -------------------------------
 
