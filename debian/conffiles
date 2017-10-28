@@ -1,3 +1,4 @@
 /etc/dumalogiya/dumacast-config.sh
 /etc/modules-load.d/dumalogiya-v4l2loopback.conf
 /etc/sudoers.d/dumacast-v4l2loopback
+/etc/dumalogiya/empty.mp4

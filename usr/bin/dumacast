@@ -17,7 +17,7 @@ if [ -d $CONFIG_DIR_USER ]
 			do
 				cp -rv "$CONFIG_DIR_GLOBAL/$i" "$CONFIG_DIR_USER/$i"
 			done
-		ln -s "$CONFIG_DIR_USER/README.md" "$CONFIG_DIR_GLOBAL/README.md"
+		ln -s "$CONFIG_DIR_GLOBAL/README.md" "$CONFIG_DIR_USER/README.md"
 fi
 
 # теперь перенесем содержимое существующих конфигов в новые (пеерехжаем на новый формат конфигов). CONFIG_DIR_GLOBAL не задаем переменной, т.к. у старой версии нашей программы была фиксированная диркетория с конфигами
@@ -38,7 +38,7 @@ fi
 if [ -z "`lsmod | grep v4l2loopback`" ]
 	then
 		# /usr/bin/dumalogiya-vwcm-modprobe is a script with suid which allows to perform "modprobe v4l2loopback" from userspace
-		dumalogiya-vwcm-modprobe
+		dumacast-modprobe
 fi
 # проверим наличие браузера, с которым мы должны работать
 if ! [ -f "$CHROMIUM" ]; then
@@ -67,6 +67,11 @@ VIRT_CAMERA="/dev/`ls /sys/devices/virtual/video4linux/ | head -n1`"
 source "$CONFIG_DIR_GLOBAL/dumacast-config.sh"
 source "$CONFIG_DIR_USER/dumacast-config.sh"
 # таким образом, если в конфигах не задана вирутальная веб-камера, то будет использоваться первая в системе, а если задана, то параметр будет перезаписан
+# dumacast-config-overrides.sh используется для переназначения каких-либо настроек путем обновления пакета в репозиториях, сделан на всякий случай, как резервный механизм внесения изменений в настройки поверх пользовательских
+source "$CONFIG_DIR_GLOBAL/dumacast-config-overrides.sh"
+
+# проверим, чтобы вирутальная камера и настоящая камера не были одним и тем же устройством
+### дописать такую проверку
 
 RESOLUTION=""$IMG_WIDTH"x"$IMG_HEIGHT""
 echo "Разрешение картинки: $RESOLUTION"
@@ -104,7 +109,7 @@ fi
 pkill chromium
 pkill pavucontrol
 
-if [ PULSEAUDIO_RESTART = "yes" ]
+if [ $PULSEAUDIO_RESTART = "yes" ]
 	then
 		pulseaudio --kill
 		sleep 5
@@ -173,13 +178,13 @@ function ffmpeg_real_webcam {
 	echo $! >/tmp/ffmpeg-webcam-dumalogiya.pid
 }
 kill_ffmpeg_all
-echo "dumalogiya-vwcm: 1) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
+echo "dumacast: 1) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
 # kill_ffmpeg_all
 # v4l2loopback-ctl set-timeout-image $CONFIG_DIR_GLOBAL/null.png $VIRT_CAMERA
 # v4l2-ctl -d $VIRT_CAMERA -c timeout_image_io=0
 # v4l2loopback-ctl set-fps 25 $VIRT_CAMERA
 # pavucontrol & PULSE_SOURCE=null0.monitor chromium &
-echo "dumalogiya-vwcm: 2) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
+echo "dumacast: 2) VIRT_CAMERA: $VIRT_CAMERA; webcam: $WEBCAM; REAL_OUTPUT: $REAL_OUTPUT" | logger
 ffmpeg_zaglushka
 ffmpeg_real_webcam &
 # ffmpeg -f video4linux2 -i $WEBCAM -f v4l2 -pix_fmt yuv420p -vf scale=640:480 $VIRT_CAMERA &
@@ -221,7 +226,7 @@ function choose_action {
 			filename="`zenity --file-selection --title="Выбор аудио для проигрывания"`"
 					case $? in
 					0)
-					env PULSE_SINK=ffmpegplay ffmpeg "$filename" & echo $! >/tmp/ffmpeg-audio-dumalogiya.pid &
+					env PULSE_SINK=ffmpegplay ffplay "$filename" & echo $! >/tmp/ffmpeg-audio-dumalogiya.pid &
 					;;
 					*)  zenity --info --text="Не выбран файл, продолжаем работать без проигрывания аудио в виртуальные камеру и микрофон" ;;
 					esac 

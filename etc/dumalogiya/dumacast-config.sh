@@ -23,4 +23,4 @@ REAL_OUTPUT=""
 OPEN_URL="http://dumalogiya.ru/webinar"
 
 # перезапускать ли Pulseaudio перед началом работы, чтобы очистить его от мусора в виде предыдущих синков, копирований звука и пр. =yes для перезапуска, иные значения эквивалентны =no.
-PULSEAUDIO_RESTART="yes"
+PULSEAUDIO_RESTART="no"
