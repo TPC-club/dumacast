@@ -1,4 +1,4 @@
-dumacast (3.0) xenial; urgency=high
+dumacast (3.0.1) xenial; urgency=high
 
   * dumalogiya-vwcm переименован в dumacast
   * добавлен параметр модуля ядра v4l2loopback, без которого новые версии Chromium опять перестали видеть виртуальную веб-камеру
@@ -8,7 +8,7 @@ dumacast (3.0) xenial; urgency=high
   * обеспечен перенос конфигов в домашнюю папку пользователя и их преобразование из старого формата в новый
   * исправлены недочеты и ошибки, выявленные spellcheck
 
- -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Sat, 08 Jul 2017 23:59:18 +0300 
+ -- Mikhail Novosyolov <mikhailnov@dumalogiya.ru>  Sun, 29 Oct 2017 13:36:00 +0300 
  
 dumalogiya-vwcm (2.4) xenial; urgency=high
 
