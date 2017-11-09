@@ -58,7 +58,7 @@ sudo cp -rv usr /
 ```
 git clone https://github.com/mikhailnov/dumacast.git
 cd dumacast
-debuild
+debuild -I
 ```
 Deb-пакет соберется в директории на уровень ниже.
 
