@@ -20,6 +20,7 @@ REAL_OUTPUT=""
 # CHROMIUM
 
 # адрес сайта, который открывать при запуске браузера
+# https://demo.bigbluebutton.org/ can be used for testing
 OPEN_URL="http://dumalogiya.ru/webinar"
 
 # перезапускать ли Pulseaudio перед началом работы, чтобы очистить его от мусора в виде предыдущих синков, копирований звука и пр. =yes для перезапуска, иные значения эквивалентны =no.
